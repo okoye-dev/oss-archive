@@ -5,10 +5,11 @@ import { Card } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFiles } from "@/hooks/useFiles";
+import { Download } from "lucide-react";
 
 const Home = () => {
   const router = useRouter();
-  const { files, loading, error, uploading, uploadMultipleFiles } = useFiles();
+  const { files, loading, error, uploading, uploadMultipleFiles, downloadFile } = useFiles();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
@@ -100,11 +101,19 @@ const Home = () => {
                 <h3 className="text-lg font-medium mb-4">Uploaded Files:</h3>
                 <div className="space-y-2">
                   {files.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                      <span className="text-sm font-medium">{file.file_name || file.name}</span>
-                      <span className="text-xs text-gray-500">
-                        {file.file_size ? `${(file.file_size / 1024 / 1024).toFixed(2)} MB` : 'Unknown size'}
-                      </span>
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-textGray">
+                      <div className="flex-1">
+                        <span className="text-sm font-medium">{file.name}</span>
+                        <div className="text-xs text-gray-500">
+                          ID: {file.id}
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => downloadFile(file.storage_key)}
+                        variant="outline"
+                      >
+                        ⬇️ Download
+                      </Button>
                     </div>
                   ))}
                 </div>

@@ -59,6 +59,16 @@ func (h *FileHandler) UploadFile(c *gin.Context) {
 	rest.Success(c, fileData)
 }
 
+type FilesResponse struct {
+	Files []FileResponse `json:"files"`
+}
+
+type FileResponse struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	StorageKey string `json:"storage_key"`
+}
+
 func (h *FileHandler) GetFiles(c *gin.Context) {
 	files, err := h.storage.ListFiles()
 	if err != nil {
@@ -66,16 +76,18 @@ func (h *FileHandler) GetFiles(c *gin.Context) {
 		return
 	}
 
-	var fileList []map[string]interface{}
+	var fileList []FileResponse
 	for _, filename := range files {
-		fileList = append(fileList, map[string]interface{}{
-			"id":        filename,
-			"file_name": filepath.Base(filename),
-			"file_path": filename,
+		fileList = append(fileList, FileResponse{
+			ID:         filename,
+			Name:       filepath.Base(filename),
+			StorageKey: filename,
 		})
 	}
 
-	rest.Success(c, fileList)
+	rest.Success(c, FilesResponse{
+		Files: fileList,
+	})
 }
 
 func (h *FileHandler) GetFile(c *gin.Context) {

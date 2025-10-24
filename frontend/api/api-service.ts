@@ -21,7 +21,7 @@ class ApiService {
 
   constructor() {
     const baseUrl = this.getBaseUrl();
-    this.apiPath = `${baseUrl}/v1`;
+    this.apiPath = `${baseUrl}/api/v1`;
     this.defaultHeaders = {
       "Content-Type": "application/json",
     };

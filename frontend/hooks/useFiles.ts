@@ -1,47 +1,28 @@
 import { useState, useEffect, useCallback } from "react";
-import { getFiles, uploadFiles, FileData } from "@/api/files";
+import { getFiles, uploadFiles, downloadFile, FileData } from "@/api/files";
 
-interface UseQueryResult<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => Promise<void>;
-}
-
-const useQuery = <T>(queryFn: () => Promise<T>): UseQueryResult<T> => {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
+export const useFiles = () => {
+  const [files, setFiles] = useState<FileData[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const fetchData = useCallback(async () => {
+  const fetchFiles = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const result = await queryFn();
-      setData(result);
+      const result = await getFiles();
+      setFiles(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
-      console.error("Query error:", err);
     } finally {
       setLoading(false);
     }
-  }, [queryFn]);
+  }, []);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  return {
-    data,
-    loading,
-    error,
-    refetch: fetchData,
-  };
-};
-
-export const useFiles = () => {
-  const { data: files, loading, error, refetch } = useQuery(() => getFiles());
-  const [uploading, setUploading] = useState(false);
+    fetchFiles();
+  }, []);
 
   const uploadMultipleFiles = useCallback(async (fileList: File[]): Promise<FileData[]> => {
     try {
@@ -56,7 +37,7 @@ export const useFiles = () => {
         uploadedFiles.push(uploadedFile);
       }
 
-      await refetch(); // Refetch files after upload
+      await fetchFiles();
       return uploadedFiles;
     } catch (err) {
       console.error("Failed to upload files:", err);
@@ -64,14 +45,23 @@ export const useFiles = () => {
     } finally {
       setUploading(false);
     }
-  }, [refetch]);
+  }, [fetchFiles]);
+
+  const handleDownload = useCallback(async (fileName: string) => {
+    try {
+      await downloadFile(fileName);
+    } catch (err) {
+      console.error("Failed to download file:", err);
+    }
+  }, []);
 
   return {
-    files: files || [],
+    files,
     loading,
     error,
     uploading,
-    refetch,
+    refetchFiles: fetchFiles,
     uploadMultipleFiles,
+    downloadFile: handleDownload,
   };
 };
