@@ -4,60 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import React from "react";
+import { useFiles } from "@/hooks/useFiles";
 
 const Home = () => {
   const router = useRouter();
-  const [files, setFiles] = useState<any[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const { files, loading, error, uploading, uploadMultipleFiles } = useFiles();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
     if (selectedFiles.length === 0) return;
 
-    setUploading(true);
+    await uploadMultipleFiles(selectedFiles);
     
-    for (const file of selectedFiles) {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      try {
-        const response = await fetch('/api/v1/files', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          console.log('File uploaded:', result);
-        } else {
-          console.error('Upload failed:', response.statusText);
-        }
-      } catch (error) {
-        console.error('Upload error:', error);
-      }
-    }
-    
-    setUploading(false);
-    fetchFiles();
+    // Clear the input
+    event.target.value = '';
   };
-
-  const fetchFiles = async () => {
-    try {
-      const response = await fetch('/api/v1/files');
-      if (response.ok) {
-        const data = await response.json();
-        setFiles(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch files:', error);
-    }
-  };
-
-  // Fetch files on component mount
-  React.useEffect(() => {
-    fetchFiles();
-  }, []);
 
   const features = [
     {
