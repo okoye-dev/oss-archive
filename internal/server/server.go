@@ -12,18 +12,27 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/okoye-dev/oss-archive/internal/config"
+	"github.com/okoye-dev/oss-archive/internal/storage"
 )
 
 // Server wraps the HTTP server with configuration
 type Server struct {
 	httpServer *http.Server
 	config     *config.Config
+	storage    storage.StorageInterface
 }
 
 // New creates a new server instance with the given configuration
 func New(cfg *config.Config) *Server {
+	// Initialize storage
+	s3Storage, err := storage.NewS3Storage(&cfg.S3)
+	if err != nil {
+		log.Fatalf("Failed to initialize storage: %v", err)
+	}
+
 	return &Server{
-		config: cfg,
+		config:  cfg,
+		storage: s3Storage,
 	}
 }
 
@@ -32,7 +41,7 @@ func (s *Server) SetupRoutes() *gin.Engine {
 	gin.SetMode(s.config.Logging.Mode)
 	
 	router := gin.Default()
-	SetupRoutes(router)
+	SetupRoutes(router, s.storage)
 
 	return router
 }

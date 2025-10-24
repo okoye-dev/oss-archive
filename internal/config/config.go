@@ -11,6 +11,7 @@ type Config struct {
 	Database DatabaseConfig `yaml:"database"`
 	Server   ServerConfig   `yaml:"server"`
 	Logging  LoggingConfig  `yaml:"logging"`
+	S3       S3Config       `yaml:"s3"`
 }
 
 // DatabaseConfig holds database connection settings
@@ -36,6 +37,17 @@ type ServerConfig struct {
 type LoggingConfig struct {
 	Level string `yaml:"level"` // debug, info, warn, error
 	Mode  string `yaml:"mode"`  // gin mode: debug, release, test
+}
+
+// S3Config holds S3-compatible storage settings
+type S3Config struct {
+	Endpoint        string `yaml:"endpoint"`
+	Region          string `yaml:"region"`
+	AccessKeyID     string `yaml:"access_key_id"`
+	SecretAccessKey string `yaml:"secret_access_key"`
+	UseSSL          bool   `yaml:"use_ssl"`
+	BucketName      string `yaml:"bucket_name"`
+	ForcePathStyle  bool   `yaml:"force_path_style"`
 }
 
 // LoadConfig reads and parses the configuration file

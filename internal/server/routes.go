@@ -3,14 +3,15 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/okoye-dev/oss-archive/internal/handlers"
+	"github.com/okoye-dev/oss-archive/internal/storage"
 )
 
-func SetupRoutes(router *gin.Engine) {
+func SetupRoutes(router *gin.Engine, storage storage.StorageInterface) {
 	api := router.Group("/api/v1")
 	
 	setupHealthRoutes(api)
 	setupUserRoutes(api)
-	setupFileRoutes(api)
+	setupFileRoutes(api, storage)
 }
 
 func setupHealthRoutes(rg *gin.RouterGroup) {
@@ -21,15 +22,14 @@ func setupHealthRoutes(rg *gin.RouterGroup) {
 func setupUserRoutes(rg *gin.RouterGroup) {
 	users := rg.Group("/users")
 	users.POST("", handlers.CreateUser)
-	// users.GET("/:id", handlers.GetUser)
-	// users.PUT("/:id", handlers.UpdateUser)
-	// users.DELETE("/:id", handlers.DeleteUser)
 }
 
-func setupFileRoutes(rg *gin.RouterGroup) {
+func setupFileRoutes(rg *gin.RouterGroup, storage storage.StorageInterface) {
+	fileHandler := handlers.NewFileHandler(storage)
+	
 	files := rg.Group("/files")
-	files.GET("", handlers.GetFiles)
-	// files.POST("", handlers.UploadFile)
-	// files.GET("/:id", handlers.GetFile)
-	// files.DELETE("/:id", handlers.DeleteFile)
+	files.GET("", fileHandler.GetFiles)
+	files.POST("", fileHandler.UploadFile)
+	files.GET("/:id", fileHandler.GetFile)
+	files.DELETE("/:id", fileHandler.DeleteFile)
 }

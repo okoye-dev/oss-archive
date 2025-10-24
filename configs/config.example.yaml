@@ -18,3 +18,12 @@ server:
 logging:
   level: info # debug, info, warn, error
   mode: release # debug, release, test
+
+s3:
+  endpoint: localhost:9000 # For MinIO, leave empty for AWS S3
+  region: us-east-1 
+  access_key_id: minioadmin 
+  secret_access_key: minioadmin 
+  use_ssl: false 
+  bucket_name: files
+  force_path_style: true # true for MinIO, false for AWS S3
