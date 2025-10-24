@@ -31,7 +31,7 @@ export const uploadFiles = async (formData: FormData): Promise<FileData> => {
 
 export const downloadFile = async (fileName: string): Promise<void> => {
   const baseUrl = getApiBaseUrl();
-  const response = await fetch(`${baseUrl}/v1/files/${fileName}`);
+  const response = await fetch(`${baseUrl}/files/${fileName}`);
   
   if (!response.ok) {
     throw new Error(`Failed to download file: ${response.statusText}`);

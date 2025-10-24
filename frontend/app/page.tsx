@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFiles } from "@/hooks/useFiles";
-import { Download } from "lucide-react";
+import { Download, DownloadCloud } from "lucide-react";
 
 const Home = () => {
   const router = useRouter();
@@ -111,8 +111,9 @@ const Home = () => {
                       <Button
                         onClick={() => downloadFile(file.storage_key)}
                         variant="outline"
+                        className="hover:bg-primary/10"
                       >
-                        ⬇️ Download
+                        <DownloadCloud />
                       </Button>
                     </div>
                   ))}
