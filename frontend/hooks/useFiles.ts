@@ -46,13 +46,16 @@ export const useFiles = () => {
   const uploadMultipleFiles = useCallback(async (fileList: File[]): Promise<FileData[]> => {
     try {
       setUploading(true);
-      const formData = new FormData();
+      const uploadedFiles: FileData[] = [];
       
-      fileList.forEach((file) => {
-        formData.append("files", file);
-      });
+      for (const file of fileList) {
+        const formData = new FormData();
+        formData.append("file", file);
+        
+        const uploadedFile = await uploadFiles(formData);
+        uploadedFiles.push(uploadedFile);
+      }
 
-      const uploadedFiles = await uploadFiles(formData);
       await refetch(); // Refetch files after upload
       return uploadedFiles;
     } catch (err) {

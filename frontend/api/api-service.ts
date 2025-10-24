@@ -9,7 +9,7 @@ type RequestOptions = {
 
 export const getApiBaseUrl = () => {
   if (process.env.NODE_ENV === "development") {
-    return process.env.NEXT_PUBLIC_DEV_SERVER_URL || "";
+    return process.env.NEXT_PUBLIC_DEV_SERVER_URL || "http://localhost:6060/api";
   }
 
   return process.env.NEXT_PUBLIC_APP_SERVER_URL || "";
