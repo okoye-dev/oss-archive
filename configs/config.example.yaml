@@ -1,4 +1,5 @@
 # Database configuration
+
 database:
   host: localhost
   port: 5432
@@ -6,4 +7,14 @@ database:
   password: postgres
   dbname: oss-archive
   sslmode: disable
-  
+
+server:
+  port: 6060
+  read_timeout: 30 # seconds - max time to read request
+  write_timeout: 30 # seconds - max time to write response
+  idle_timeout: 120 # seconds - max idle connection time
+  shutdown_timeout: 5 # seconds - graceful shutdown timeout
+
+logging:
+  level: info # debug, info, warn, error
+  mode: release # debug, release, test
