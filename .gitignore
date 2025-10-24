@@ -33,3 +33,17 @@ go.work.sum
 
 # Config files
 configs/config.yaml
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js (for frontend)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/dist/
