@@ -64,10 +64,11 @@ export const downloadFile = async (fileName: string): Promise<void> => {
   const data = await response.json();
   const downloadUrl = data.url;
   
-  // Use presigned URL to download directly from S3
+  // Use presigned URL directly for download
   const a = document.createElement('a');
   a.href = downloadUrl;
   a.download = fileName.split('_').slice(1).join('_'); // Remove UUID prefix for filename
+  a.style.display = 'none';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

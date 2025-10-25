@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const SERVER_URL = process.env.BACKEND_URL || 'http://127.0.0.1:6060';
+// Backend configuration - use existing env vars
+const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:6060';
+const REQUEST_TIMEOUT = 30000; // 30 seconds
 
 export async function GET(
   request: NextRequest,
@@ -35,48 +37,91 @@ async function proxyRequest(
   pathSegments: string[],
   method: string
 ) {
-  const path = pathSegments.join('/');
-  const url = `${SERVER_URL}/api/${path}`;
-  
-  const headers: Record<string, string> = {};
-  
-  // Copy relevant headers
-  request.headers.forEach((value, key) => {
-    if (key.toLowerCase() !== 'host' && key.toLowerCase() !== 'content-length') {
-      headers[key] = value;
-    }
-  });
-
   try {
-    let body: any = undefined;
+    // Build the target URL
+    const path = pathSegments.join('/');
+    const searchParams = request.nextUrl.searchParams.toString();
+    const queryString = searchParams ? `?${searchParams}` : '';
+    const url = `${BACKEND_URL}/api/${path}${queryString}`;
     
-    // Handle request body for POST/PUT
-    if (method === 'POST' || method === 'PUT') {
-      body = await request.arrayBuffer();
+    // Prepare headers - exclude problematic ones
+    const headers: Record<string, string> = {};
+    const excludeHeaders = ['host', 'content-length', 'connection', 'upgrade'];
+    
+    request.headers.forEach((value, key) => {
+      if (!excludeHeaders.includes(key.toLowerCase())) {
+        headers[key] = value;
+      }
+    });
+
+    // Handle request body
+    let body: any = undefined;
+    if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
+      // For multipart/form-data, preserve the raw body
+      const contentType = request.headers.get('content-type');
+      if (contentType?.includes('multipart/form-data')) {
+        body = await request.arrayBuffer();
+      } else {
+        body = await request.arrayBuffer();
+      }
     }
 
-    const response = await fetch(url, {
-      method,
-      headers,
-      body,
-    });
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
-    const responseHeaders = new Headers();
-    response.headers.forEach((value, key) => {
-      responseHeaders.set(key, value);
-    });
+    try {
+      const response = await fetch(url, {
+        method,
+        headers,
+        body,
+        signal: controller.signal,
+      });
 
-    const responseBody = await response.text();
-    
-    return new NextResponse(responseBody, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: responseHeaders,
-    });
+      clearTimeout(timeoutId);
+
+      // Copy response headers
+      const responseHeaders = new Headers();
+      response.headers.forEach((value, key) => {
+        // Don't copy problematic headers
+        if (!['content-encoding', 'transfer-encoding'].includes(key.toLowerCase())) {
+          responseHeaders.set(key, value);
+        }
+      });
+
+      // Handle response body
+      const responseBody = await response.text();
+      
+      return new NextResponse(responseBody, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: responseHeaders,
+      });
+
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        console.error(`[PROXY] Request timeout: ${url}`);
+        return NextResponse.json(
+          { error: 'Request timeout' },
+          { status: 504 }
+        );
+      }
+      
+      throw fetchError;
+    }
+
   } catch (error) {
-    console.error('Proxy error:', error);
+    console.error(`[PROXY] Error proxying ${method} ${request.url}:`, error);
+    
+    // Return detailed error in development
+    const isDev = process.env.NODE_ENV === 'development';
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Proxy error',
+        details: isDev ? String(error) : undefined
+      },
       { status: 500 }
     );
   }
