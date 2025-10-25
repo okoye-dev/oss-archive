@@ -18,6 +18,7 @@ help:
 	@echo ""
 	@echo "Production:"
 	@echo "  make prod                Build and run production container"
+	@echo "  make prod-logs           View production logs"
 	@echo "  make prod-stop           Stop production container"
 	@echo ""
 	@echo "Utilities:"
@@ -25,7 +26,7 @@ help:
 	@echo "  make clean               Clean up Docker resources"
 
 # Development commands
-dev-start:
+dev:
 	@echo "🚀 Starting development environment..."
 	docker compose -f docker-compose.dev.yml up -d
 	@echo "✅ Services started:"
@@ -52,7 +53,12 @@ dev-logs:
 # Production commands
 prod:
 	@echo "🏗️  Building and starting production container..."
+	@echo "⚠️  Note: Set environment variables manually or use Railway"
+	@echo "💡 For local testing with Supabase: export variables from .env.prod first"
 	docker compose up --build -d
+
+prod-logs:
+	docker compose logs -f app
 
 prod-stop:
 	@echo "🛑 Stopping production container..."

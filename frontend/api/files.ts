@@ -49,13 +49,13 @@ export const uploadFiles = async (
       reject(new Error('Upload failed'));
     });
     
-    xhr.open('POST', '/api/v1/files');
+    xhr.open('POST', `${getApiBaseUrl()}/files`);
     xhr.send(formData);
   });
 };
 
 export const downloadFile = async (fileName: string): Promise<void> => {
-  const response = await fetch(`/api/v1/files/${fileName}`);
+  const response = await fetch(`${getApiBaseUrl()}/files/${fileName}`);
   
   if (!response.ok) {
     throw new Error(`Failed to download file: ${response.statusText}`);

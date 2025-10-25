@@ -9,7 +9,7 @@ type RequestOptions = {
 
 export const getApiBaseUrl = () => {
   // Use the environment variable regardless of NODE_ENV
-  return process.env.NEXT_PUBLIC_API_URL || "/api";
+  return process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 };
 
 class ApiService {
@@ -18,7 +18,7 @@ class ApiService {
 
   constructor() {
     const baseUrl = this.getBaseUrl();
-    this.apiPath = `${baseUrl}/v1`;
+    this.apiPath = baseUrl;
     this.defaultHeaders = {
       "Content-Type": "application/json",
     };

@@ -52,3 +52,6 @@ frontend/node_modules/
 frontend/.next/
 frontend/out/
 frontend/dist/
+frontend/.pnpm-store/
+.pnpm-store/
+pnpm-lock.yaml.bak

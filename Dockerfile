@@ -36,15 +36,8 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install pnpm for running Next.js and curl for MinIO
-RUN npm install -g pnpm && \
-    apk --no-cache add curl
-
-# Install MinIO
-RUN curl -O https://dl.min.io/server/minio/release/linux-amd64/minio && \
-    chmod +x minio && \
-    
-    mv minio /usr/local/bin/
+# Install pnpm for running Next.js
+RUN npm install -g pnpm
 
 # Copy Go binary
 COPY --from=go-builder /app/main ./
@@ -57,11 +50,6 @@ COPY --from=frontend-builder /app/node_modules ./frontend/node_modules
 
 # Create startup script
 RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'echo "Starting MinIO..."' >> /app/start.sh && \
-    echo 'mkdir -p /app/data' >> /app/start.sh && \
-    echo 'MINIO_ROOT_USER=minioadmin MINIO_ROOT_PASSWORD=minioadmin minio server /app/data --address :9000 --console-address :9001 &' >> /app/start.sh && \
-    echo 'echo "Waiting for MinIO to be ready..."' >> /app/start.sh && \
-    echo 'sleep 5' >> /app/start.sh && \
     echo 'echo "Starting Go backend..."' >> /app/start.sh && \
     echo './main &' >> /app/start.sh && \
     echo 'echo "Starting Next.js frontend..."' >> /app/start.sh && \

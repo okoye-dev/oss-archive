@@ -5,8 +5,6 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Use environment variables from production
-      # S3 config will be loaded from env vars
       - NODE_ENV=production
       - GIN_MODE=release
 
