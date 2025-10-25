@@ -14,6 +14,7 @@ services:
       - S3_ACCESS_KEY_ID=minioadmin
       - S3_SECRET_ACCESS_KEY=minioadmin
       - S3_FORCE_PATH_STYLE=true
+      - S3_BUCKET_NAME=oss-archive
       - DB_SSLMODE=disable
       # Frontend environment
       - NEXT_PUBLIC_DEV_SERVER_URL=http://localhost:6060/api/v1
