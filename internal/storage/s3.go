@@ -70,36 +70,9 @@ func NewS3Storage(cfg *appConfig.S3Config) (StorageInterface, error) {
 		client:     s3Client,
 		bucketName: cfg.BucketName,
 	}
-
-	if err := storage.ensureBucket(); err != nil {
-		return nil, fmt.Errorf("failed to ensure bucket exists: %w", err)
-	}
+    // Bucket must already exist (especially for Cloudflare R2)
 
 	return storage, nil
-}
-
-func (s *S3Storage) ensureBucket() error {
-	ctx := context.Background()
-	
-	_, err := s.client.HeadBucket(ctx, &s3.HeadBucketInput{
-		Bucket: aws.String(s.bucketName),
-	})
-	
-	if err != nil {
-		if strings.Contains(err.Error(), "NotFound") {
-			_, err = s.client.CreateBucket(ctx, &s3.CreateBucketInput{
-				Bucket: aws.String(s.bucketName),
-			})
-			if err != nil {
-				return fmt.Errorf("failed to create bucket: %w", err)
-			}
-			log.Printf("Created bucket: %s", s.bucketName)
-		} else {
-			return fmt.Errorf("failed to check bucket: %w", err)
-		}
-	}
-
-	return nil
 }
 
 func (s *S3Storage) UploadFile(fileName string, reader io.Reader, fileSize int64, contentType string) error {
