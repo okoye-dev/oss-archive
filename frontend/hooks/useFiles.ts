@@ -36,7 +36,7 @@ export const useFiles = () => {
       // Show initial toast
       const progressToast = toast({
         title: "Uploading files...",
-        description: `0% complete (0/${fileList.length} files)`,
+        description: `0% complete`,
       });
       
       for (let i = 0; i < fileList.length; i++) {
@@ -53,7 +53,7 @@ export const useFiles = () => {
           progressToast.update({
             id: progressToast.id,
             title: "Uploading files...",
-            description: `${totalProgress}% complete (${i + (progress === 100 ? 1 : 0)}/${fileList.length} files)`,
+            description: `${totalProgress}% complete`,
           });
         });
         uploadedFiles.push(uploadedFile);

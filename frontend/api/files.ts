@@ -12,7 +12,7 @@ interface FilesResponse {
 
 export const getFiles = async (): Promise<FileData[]> => {
   const response = await apiService.get<FilesResponse>("/files");
-  return response.files;
+  return response.files || [];
 };
 
 export const uploadFiles = async (
