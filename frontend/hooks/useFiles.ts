@@ -28,6 +28,8 @@ export const useFiles = () => {
   }, []);
 
   const uploadMultipleFiles = useCallback(async (fileList: File[]): Promise<FileData[]> => {
+    let isUploading = true;
+    
     try {
       setUploading(true);
       setUploadProgress(0);
@@ -37,7 +39,13 @@ export const useFiles = () => {
       const progressToast = toast({
         title: "Uploading files...",
         description: `0% complete`,
-        onOpenChange: () => {}, // Prevent dismissal during upload
+        onOpenChange: (open) => {
+          // Prevent manual dismissal during upload
+          if (!open && isUploading) {
+            // Force it to stay open by returning false
+            return false;
+          }
+        },
       });
       
       for (let i = 0; i < fileList.length; i++) {
@@ -60,17 +68,20 @@ export const useFiles = () => {
         uploadedFiles.push(uploadedFile);
       }
 
-      // Show success toast
+      // Mark upload as complete and show success toast
+      isUploading = false;
       progressToast.update({
         id: progressToast.id,
         title: "Upload complete! 🎉",
         description: `Successfully uploaded ${fileList.length} file${fileList.length > 1 ? 's' : ''}`,
+        onOpenChange: undefined, // Allow dismissal after completion
       });
 
       await fetchFiles();
       return uploadedFiles;
     } catch (err) {
       console.error("Failed to upload files:", err);
+      isUploading = false;
       toast({
         title: "Upload failed",
         description: "Failed to upload files. Please try again.",
