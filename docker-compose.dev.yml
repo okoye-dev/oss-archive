@@ -17,17 +17,25 @@ services:
       timeout: 20s
       retries: 3
 
-  # Create MinIO bucket
+  # Create MinIO bucket (one-shot job)
   minio-setup:
     image: minio/mc
     depends_on:
       minio:
         condition: service_healthy
+    restart: "no"
     entrypoint: >
       /bin/sh -c "
+      echo 'Setting up MinIO bucket...';
       /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb myminio/oss-archive --ignore-existing;
-      /usr/bin/mc anonymous set public myminio/oss-archive;
+      if ! /usr/bin/mc ls myminio/oss-archive >/dev/null 2>&1; then
+        echo 'Creating bucket oss-archive...';
+        /usr/bin/mc mb myminio/oss-archive;
+        /usr/bin/mc anonymous set public myminio/oss-archive;
+        echo 'Bucket created successfully';
+      else
+        echo 'Bucket oss-archive already exists, skipping creation';
+      fi;
       exit 0;
       "
 
@@ -39,7 +47,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=/api
+      - NEXT_PUBLIC_API_URL=/api/v1
       - BACKEND_URL=http://host.docker.internal:6060
     volumes:
       - ./frontend:/app
