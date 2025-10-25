@@ -33,10 +33,11 @@ export const useFiles = () => {
       setUploadProgress(0);
       const uploadedFiles: FileData[] = [];
       
-      // Show initial toast
+      // Show initial toast (non-dismissible during upload)
       const progressToast = toast({
         title: "Uploading files...",
         description: `0% complete`,
+        onOpenChange: () => {}, // Prevent dismissal during upload
       });
       
       for (let i = 0; i < fileList.length; i++) {

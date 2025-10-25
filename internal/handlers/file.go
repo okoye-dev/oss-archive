@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -70,6 +71,7 @@ type FileResponse struct {
 	ID         string `json:"id"`
 	Name       string `json:"name"`
 	StorageKey string `json:"storage_key"`
+	Size       int64  `json:"size"`
 }
 
 func (h *FileHandler) GetFiles(c *gin.Context) {
@@ -94,10 +96,18 @@ func (h *FileHandler) GetFiles(c *gin.Context) {
 			fileName = filepath.Base(storageKey)
 		}
 		
+		// Get file size
+		fileSize, err := h.storage.GetFileSize(storageKey)
+		if err != nil {
+			log.Printf("Failed to get file size for %s: %v", storageKey, err)
+			fileSize = 0
+		}
+		
 		fileList = append(fileList, FileResponse{
 			ID:         fileID,
 			Name:       fileName,
 			StorageKey: storageKey,
+			Size:       fileSize,
 		})
 	}
 

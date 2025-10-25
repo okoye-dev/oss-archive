@@ -20,6 +20,7 @@ type StorageInterface interface {
 	GetFile(fileName string) (io.ReadCloser, error)
 	DeleteFile(fileName string) error
 	ListFiles() ([]string, error)
+	GetFileSize(fileName string) (int64, error)
 }
 
 type S3Storage struct {
@@ -171,4 +172,19 @@ func (s *S3Storage) ListFiles() ([]string, error) {
 	}
 
 	return files, nil
+}
+
+func (s *S3Storage) GetFileSize(fileName string) (int64, error) {
+	ctx := context.Background()
+	
+	result, err := s.client.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(s.bucketName),
+		Key:    aws.String(fileName),
+	})
+	
+	if err != nil {
+		return 0, fmt.Errorf("failed to get file size: %w", err)
+	}
+
+	return aws.ToInt64(result.ContentLength), nil
 }
