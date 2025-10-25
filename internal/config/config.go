@@ -76,6 +76,17 @@ func loadFromEnv() *Config {
 	// Always try to load from env vars if any are set
 	// No longer require database vars to be set
 
+	// Log environment variables for debugging
+	fmt.Printf("🔧 Loading configuration from environment:\n")
+	fmt.Printf("   S3_ENDPOINT: %s\n", os.Getenv("S3_ENDPOINT"))
+	fmt.Printf("   S3_REGION: %s\n", os.Getenv("S3_REGION"))
+	fmt.Printf("   S3_ACCESS_KEY_ID: %s\n", maskString(os.Getenv("S3_ACCESS_KEY_ID")))
+	fmt.Printf("   S3_SECRET_ACCESS_KEY: %s\n", maskString(os.Getenv("S3_SECRET_ACCESS_KEY")))
+	fmt.Printf("   S3_USE_SSL: %s\n", os.Getenv("S3_USE_SSL"))
+	fmt.Printf("   S3_BUCKET_NAME: %s\n", os.Getenv("S3_BUCKET_NAME"))
+	fmt.Printf("   S3_FORCE_PATH_STYLE: %s\n", os.Getenv("S3_FORCE_PATH_STYLE"))
+	fmt.Printf("   PORT: %s\n", os.Getenv("PORT"))
+
 	config := &Config{
 		// Database: DatabaseConfig{
 		// 	Host:     getEnv("DB_HOST", "localhost"),
@@ -133,6 +144,14 @@ func getEnvBool(key string, defaultValue bool) bool {
 		}
 	}
 	return defaultValue
+}
+
+// maskString masks sensitive strings for logging
+func maskString(s string) string {
+	if len(s) <= 4 {
+		return "****"
+	}
+	return s[:4] + "****" + s[len(s)-4:]
 }
 
 // GetDatabaseConnectionString returns a formatted database connection string

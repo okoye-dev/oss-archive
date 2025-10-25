@@ -1,4 +1,4 @@
-.PHONY: dev dev-start dev-stop dev-backend dev-backend-supabase dev-logs minio help
+.PHONY: dev dev-start dev-stop dev-backend dev-backend-remote dev-logs minio help
 
 # Default target
 help:
@@ -7,12 +7,12 @@ help:
 	@echo "Setup (first time):"
 	@echo "  cp .env.local.example .env.local"
 	@echo "  cp .env.prod.example .env.prod"
-	@echo "  # Edit .env.prod with your Supabase credentials"
+	@echo "  # Edit .env.prod with your remote storage credentials"
 	@echo ""
 	@echo "Development (Fast iteration):"
-	@echo "  make dev-start           Start MinIO + Frontend (hot reload)"
+	@echo "  make dev                 Start MinIO + Frontend (hot reload)"
 	@echo "  make dev-backend         Start Go backend with MinIO (.env.local)"
-	@echo "  make dev-backend-sb      Start Go backend with Supabase (.env.prod)"
+	@echo "  make dev-backend-remote  Start Go backend with remote storage (.env.prod)"
 	@echo "  make dev-stop            Stop development services"
 	@echo "  make dev-logs            View development logs"
 	@echo ""
@@ -39,8 +39,8 @@ dev-backend:
 	@echo "🔧 Starting Go backend with MinIO..."
 	@export $$(cat .env.local | grep -v '^#' | xargs) && go run cmd/main.go
 
-dev-backend-sb:
-	@echo "🔧 Starting Go backend with Supabase..."
+dev-backend-remote:
+	@echo "🔧 Starting Go backend with remote storage..."
 	@export $$(cat .env.prod | grep -v '^#' | xargs) && go run cmd/main.go
 
 dev-stop:
@@ -54,7 +54,7 @@ dev-logs:
 prod:
 	@echo "🏗️  Building and starting production container..."
 	@echo "⚠️  Note: Set environment variables manually or use Railway"
-	@echo "💡 For local testing with Supabase: export variables from .env.prod first"
+	@echo "💡 For local testing with remote storage: export variables from .env.prod first"
 	docker compose up --build -d
 
 prod-logs:
