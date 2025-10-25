@@ -24,8 +24,13 @@ profile.cov
 go.work
 go.work.sum
 
-# env file
-.env
+# Environment files (never commit secrets!)
+
+*.env*
+!.env.example
+!.env.prod.example
+!.env.local.example
+!.env.test.example
 
 # Editor/IDE
 # .idea/
