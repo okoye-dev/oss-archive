@@ -4,6 +4,7 @@ export interface FileData {
   id: string;
   name: string;
   storage_key: string;
+  size: number;
 }
 
 interface FilesResponse {

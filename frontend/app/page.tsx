@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFiles } from "@/hooks/useFiles";
 import { DownloadCloud } from "lucide-react";
+import { formatFileSize } from "@/utils/formatFileSize";
 
 const Home = () => {
   const router = useRouter();
@@ -108,13 +109,16 @@ const Home = () => {
                           ID: {file.id}
                         </div>
                       </div>
-                      <Button
-                        onClick={() => downloadFile(file.storage_key)}
-                        variant="outline"
-                        className="hover:bg-primary/10"
-                      >
-                        <DownloadCloud />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">{formatFileSize(file.size)}</span>
+                        <Button
+                          onClick={() => downloadFile(file.storage_key)}
+                          variant="outline"
+                          className="hover:bg-primary/10"
+                        >
+                          <DownloadCloud />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
