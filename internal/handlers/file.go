@@ -3,15 +3,32 @@ package handlers
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/okoye-dev/oss-archive/internal/storage"
 	"github.com/okoye-dev/oss-archive/internal/transport/rest"
 )
+
+type FilesResponse struct {
+	Files []FileResponse `json:"files"`
+}
+
+type FileResponse struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	StorageKey string `json:"storage_key"`
+	Size       int64  `json:"size"`
+}
+
+type FileDownloadResponse struct {
+	URL        string `json:"url"`
+	ExpiresIn  int    `json:"expires_in"`
+	Download   bool   `json:"download"`
+}
 
 type FileHandler struct {
 	storage storage.StorageInterface
@@ -32,9 +49,8 @@ func (h *FileHandler) UploadFile(c *gin.Context) {
 	defer file.Close()
 
 	// Generate unique ID and storage key
-	timestamp := time.Now().Unix()
-	fileID := fmt.Sprintf("%d", timestamp)
-	storageKey := fmt.Sprintf("%d_%s", timestamp, header.Filename)
+	fileID := uuid.New().String()
+	storageKey := fmt.Sprintf("%s_%s", fileID, header.Filename)
 	
 	// Get content type
 	contentType := header.Header.Get("Content-Type")
@@ -63,16 +79,6 @@ func (h *FileHandler) UploadFile(c *gin.Context) {
 	rest.Success(c, fileData)
 }
 
-type FilesResponse struct {
-	Files []FileResponse `json:"files"`
-}
-
-type FileResponse struct {
-	ID         string `json:"id"`
-	Name       string `json:"name"`
-	StorageKey string `json:"storage_key"`
-	Size       int64  `json:"size"`
-}
 
 func (h *FileHandler) GetFiles(c *gin.Context) {
 	files, err := h.storage.ListFiles()
@@ -123,15 +129,20 @@ func (h *FileHandler) GetFile(c *gin.Context) {
 		return
 	}
 
-	reader, err := h.storage.GetFile(filename)
+	forceDownload := c.Query("download") == "true"
+
+	// Generate presigned URL
+	presignedURL, err := h.storage.GetPresignedURL(filename, forceDownload)
 	if err != nil {
 		rest.NotFound(c, "File not found")
 		return
 	}
-	defer reader.Close()
 
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filepath.Base(filename)))
-	c.DataFromReader(http.StatusOK, -1, "application/octet-stream", reader, nil)
+	rest.Success(c, FileDownloadResponse{
+		URL:        presignedURL,
+		Download:   forceDownload,
+		ExpiresIn:  3600,
+	})
 }
 
 func (h *FileHandler) DeleteFile(c *gin.Context) {
@@ -147,5 +158,10 @@ func (h *FileHandler) DeleteFile(c *gin.Context) {
 		return
 	}
 
-	rest.Success(c, map[string]string{"message": "File deleted successfully"})
+	rest.Success(c, FileResponse{
+		ID:         filename,
+		Name:       filename,
+		StorageKey: filename,
+		Size:       0,
+	})
 }

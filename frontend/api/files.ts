@@ -55,19 +55,31 @@ export const uploadFiles = async (
 };
 
 export const downloadFile = async (fileName: string): Promise<void> => {
+  const response = await fetch(`${getApiBaseUrl()}/files/${fileName}?download=true`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to get download URL: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  const downloadUrl = data.url;
+  
+  // Use presigned URL to download directly from S3
+  const a = document.createElement('a');
+  a.href = downloadUrl;
+  a.download = fileName.split('_').slice(1).join('_'); // Remove UUID prefix for filename
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
+
+export const getFileViewUrl = async (fileName: string): Promise<string> => {
   const response = await fetch(`${getApiBaseUrl()}/files/${fileName}`);
   
   if (!response.ok) {
-    throw new Error(`Failed to download file: ${response.statusText}`);
+    throw new Error(`Failed to get view URL: ${response.statusText}`);
   }
   
-  const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  window.URL.revokeObjectURL(url);
-  document.body.removeChild(a);
+  const data = await response.json();
+  return data.url;
 };

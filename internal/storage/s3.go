@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -17,10 +18,10 @@ import (
 
 type StorageInterface interface {
 	UploadFile(fileName string, reader io.Reader, fileSize int64, contentType string) error
-	GetFile(fileName string) (io.ReadCloser, error)
 	DeleteFile(fileName string) error
 	ListFiles() ([]string, error)
 	GetFileSize(fileName string) (int64, error)
+	GetPresignedURL(fileName string, forceDownload bool) (string, error)
 }
 
 type S3Storage struct {
@@ -187,4 +188,42 @@ func (s *S3Storage) GetFileSize(fileName string) (int64, error) {
 	}
 
 	return aws.ToInt64(result.ContentLength), nil
+}
+
+func (s *S3Storage) GetPresignedURL(fileName string, forceDownload bool) (string, error) {
+	ctx := context.Background()
+	
+	// Create presigned client
+	presignClient := s3.NewPresignClient(s.client)
+	
+	// Build GetObject input
+	input := &s3.GetObjectInput{
+		Bucket: aws.String(s.bucketName),
+		Key:    aws.String(fileName),
+	}
+	
+	// Only add Content-Disposition header if forcing download
+	if forceDownload {
+		// Extract original filename for Content-Disposition header
+		originalFilename := fileName
+		if strings.Contains(fileName, "_") {
+			// Remove UUID prefix to get original filename
+			parts := strings.SplitN(fileName, "_", 2)
+			if len(parts) == 2 {
+				originalFilename = parts[1]
+			}
+		}
+		input.ResponseContentDisposition = aws.String(fmt.Sprintf("attachment; filename=\"%s\"", originalFilename))
+	}
+	
+	// Create presigned URL
+	request, err := presignClient.PresignGetObject(ctx, input, func(opts *s3.PresignOptions) {
+		opts.Expires = time.Duration(1 * time.Hour)
+	})
+	
+	if err != nil {
+		return "", fmt.Errorf("failed to create presigned URL: %w", err)
+	}
+	
+	return request.URL, nil
 }
