@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const SERVER_URL = process.env.IPV4_BACKEND_URL;
+const SERVER_URL = process.env.IPV4_BACKEND_URL || 'http://127.0.0.1:6060';
 
 export async function GET(
   request: NextRequest,

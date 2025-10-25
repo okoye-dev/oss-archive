@@ -73,20 +73,18 @@ func LoadConfig(configPath string) (*Config, error) {
 }
 
 func loadFromEnv() *Config {
-	// Check if we have essential env vars
-	if os.Getenv("DATABASE_URL") == "" && os.Getenv("DB_HOST") == "" {
-		return nil
-	}
+	// Always try to load from env vars if any are set
+	// No longer require database vars to be set
 
 	config := &Config{
-		Database: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnvInt("DB_PORT", 5432),
-			User:     getEnv("DB_USER", "postgres"),
-			Password: getEnv("DB_PASSWORD", ""),
-			DBName:   getEnv("DB_NAME", "oss-archive"),
-			SSLMode:  getEnv("DB_SSLMODE", "require"),
-		},
+		// Database: DatabaseConfig{
+		// 	Host:     getEnv("DB_HOST", "localhost"),
+		// 	Port:     getEnvInt("DB_PORT", 5432),
+		// 	User:     getEnv("DB_USER", "postgres"),
+		// 	Password: getEnv("DB_PASSWORD", ""),
+		// 	DBName:   getEnv("DB_NAME", "oss-archive"),
+		// 	SSLMode:  getEnv("DB_SSLMODE", "require"),
+		// },
 		Server: ServerConfig{
 			Port:            getEnvInt("PORT", 6060),
 			ReadTimeout:     getEnvInt("READ_TIMEOUT", 30),
