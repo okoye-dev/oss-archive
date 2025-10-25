@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -30,11 +31,23 @@ type S3Storage struct {
 }
 
 func NewS3Storage(cfg *appConfig.S3Config) (StorageInterface, error) {
+	// Create optimized HTTP client for faster uploads
+	httpClient := &http.Client{
+		Timeout: 10 * time.Minute, // Long timeout for large uploads
+		Transport: &http.Transport{
+			MaxIdleConns:        100, 
+			MaxIdleConnsPerHost: 20, 
+			IdleConnTimeout:     90 * time.Second,
+			DisableCompression:  false,
+		},
+	}
+
 	loadOpts := []func(*config.LoadOptions) error{
 		config.WithRegion(cfg.Region),
 		config.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(cfg.AccessKeyID, cfg.SecretAccessKey, ""),
 		),
+		config.WithHTTPClient(httpClient), // Use optimized HTTP client
 	}
 
 	if cfg.Endpoint != "" {
@@ -79,8 +92,8 @@ func (s *S3Storage) UploadFile(fileName string, reader io.Reader, fileSize int64
 	ctx := context.Background()
 	
 	uploader := manager.NewUploader(s.client, func(u *manager.Uploader) {
-		u.PartSize = 8 * 1024 * 1024 // 8 MiB parts
-		u.Concurrency = 4            // modest parallelism
+		u.PartSize = 16 * 1024 * 1024 
+		u.Concurrency = 8            
 	})
 
 	_, err := uploader.Upload(ctx, &s3.PutObjectInput{
