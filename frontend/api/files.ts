@@ -15,23 +15,46 @@ export const getFiles = async (): Promise<FileData[]> => {
   return response.files;
 };
 
-export const uploadFiles = async (formData: FormData): Promise<FileData> => {
-  const baseUrl = getApiBaseUrl();
-  const response = await fetch(`${baseUrl}/api/v1/files`, {
-    method: "POST",
-    body: formData,
+export const uploadFiles = async (
+  formData: FormData, 
+  onProgress?: (progress: number) => void
+): Promise<FileData> => {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    
+    if (onProgress) {
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded / event.total) * 100);
+          onProgress(progress);
+        }
+      });
+    }
+    
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const result = JSON.parse(xhr.responseText);
+          resolve(result);
+        } catch (err) {
+          reject(new Error('Failed to parse response'));
+        }
+      } else {
+        reject(new Error(`Upload failed: ${xhr.statusText}`));
+      }
+    });
+    
+    xhr.addEventListener('error', () => {
+      reject(new Error('Upload failed'));
+    });
+    
+    xhr.open('POST', '/api/v1/files');
+    xhr.send(formData);
   });
-  
-  if (!response.ok) {
-    throw new Error(`Failed to upload file: ${response.statusText}`);
-  }
-  
-  return response.json();
 };
 
 export const downloadFile = async (fileName: string): Promise<void> => {
-  const baseUrl = getApiBaseUrl();
-  const response = await fetch(`${baseUrl}/files/${fileName}`);
+  const response = await fetch(`/api/v1/files/${fileName}`);
   
   if (!response.ok) {
     throw new Error(`Failed to download file: ${response.statusText}`);

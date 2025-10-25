@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"gopkg.in/yaml.v3"
 )
@@ -52,6 +53,12 @@ type S3Config struct {
 
 // LoadConfig reads and parses the configuration file
 func LoadConfig(configPath string) (*Config, error) {
+	// Try to load from environment variables first (for Railway/production)
+	if config := loadFromEnv(); config != nil {
+		return config, nil
+	}
+
+	// Fallback to config file (for local development)
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
@@ -63,6 +70,71 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 
 	return &config, nil
+}
+
+func loadFromEnv() *Config {
+	// Check if we have essential env vars
+	if os.Getenv("DATABASE_URL") == "" && os.Getenv("DB_HOST") == "" {
+		return nil
+	}
+
+	config := &Config{
+		Database: DatabaseConfig{
+			Host:     getEnv("DB_HOST", "localhost"),
+			Port:     getEnvInt("DB_PORT", 5432),
+			User:     getEnv("DB_USER", "postgres"),
+			Password: getEnv("DB_PASSWORD", ""),
+			DBName:   getEnv("DB_NAME", "oss-archive"),
+			SSLMode:  getEnv("DB_SSLMODE", "require"),
+		},
+		Server: ServerConfig{
+			Port:            getEnvInt("PORT", 6060),
+			ReadTimeout:     getEnvInt("READ_TIMEOUT", 30),
+			WriteTimeout:    getEnvInt("WRITE_TIMEOUT", 30),
+			IdleTimeout:     getEnvInt("IDLE_TIMEOUT", 120),
+			ShutdownTimeout: getEnvInt("SHUTDOWN_TIMEOUT", 5),
+		},
+		Logging: LoggingConfig{
+			Level: getEnv("LOG_LEVEL", "info"),
+			Mode:  getEnv("GIN_MODE", "release"),
+		},
+		S3: S3Config{
+			Endpoint:        getEnv("S3_ENDPOINT", ""),
+			Region:          getEnv("S3_REGION", "us-east-1"),
+			AccessKeyID:     getEnv("S3_ACCESS_KEY_ID", ""),
+			SecretAccessKey: getEnv("S3_SECRET_ACCESS_KEY", ""),
+			UseSSL:          getEnvBool("S3_USE_SSL", true),
+			BucketName:      getEnv("S3_BUCKET_NAME", "oss-archive"),
+			ForcePathStyle:  getEnvBool("S3_FORCE_PATH_STYLE", false),
+		},
+	}
+
+	return config
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
+	}
+	return defaultValue
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if boolValue, err := strconv.ParseBool(value); err == nil {
+			return boolValue
+		}
+	}
+	return defaultValue
 }
 
 // GetDatabaseConnectionString returns a formatted database connection string

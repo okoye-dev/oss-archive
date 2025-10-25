@@ -8,11 +8,8 @@ type RequestOptions = {
 };
 
 export const getApiBaseUrl = () => {
-  if (process.env.NODE_ENV === "development") {
-    return process.env.NEXT_PUBLIC_DEV_SERVER_URL || "http://localhost:6060/api/v1";
-  }
-
-  return process.env.NEXT_PUBLIC_APP_SERVER_URL || "";
+  // Use the environment variable regardless of NODE_ENV
+  return process.env.NEXT_PUBLIC_DEV_SERVER_URL || "/api/v1";
 };
 
 class ApiService {
@@ -21,7 +18,7 @@ class ApiService {
 
   constructor() {
     const baseUrl = this.getBaseUrl();
-    this.apiPath = `${baseUrl}`;
+    this.apiPath = `${baseUrl}/v1`;
     this.defaultHeaders = {
       "Content-Type": "application/json",
     };

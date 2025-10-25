@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -29,8 +30,10 @@ func (h *FileHandler) UploadFile(c *gin.Context) {
 	}
 	defer file.Close()
 
-	// Generate unique filename
-	filename := fmt.Sprintf("%d_%s", time.Now().Unix(), header.Filename)
+	// Generate unique ID and storage key
+	timestamp := time.Now().Unix()
+	fileID := fmt.Sprintf("%d", timestamp)
+	storageKey := fmt.Sprintf("%d_%s", timestamp, header.Filename)
 	
 	// Get content type
 	contentType := header.Header.Get("Content-Type")
@@ -38,8 +41,8 @@ func (h *FileHandler) UploadFile(c *gin.Context) {
 		contentType = "application/octet-stream"
 	}
 
-	// Upload to storage
-	err = h.storage.UploadFile(filename, file, header.Size, contentType)
+	// Upload to storage using storage key
+	err = h.storage.UploadFile(storageKey, file, header.Size, contentType)
 	if err != nil {
 		rest.InternalError(c, err)
 		return
@@ -47,13 +50,13 @@ func (h *FileHandler) UploadFile(c *gin.Context) {
 
 	// Return file info
 	fileData := map[string]interface{}{
-		"id":         filename,
-		"file_name":  header.Filename,
-		"file_path":  filename,
-		"file_size":  header.Size,
-		"file_type":  contentType,
-		"created_at": time.Now().Format(time.RFC3339),
-		"updated_at": time.Now().Format(time.RFC3339),
+		"id":          fileID,
+		"name":        header.Filename,
+		"storage_key": storageKey,
+		"file_size":   header.Size,
+		"file_type":   contentType,
+		"created_at":  time.Now().Format(time.RFC3339),
+		"updated_at":  time.Now().Format(time.RFC3339),
 	}
 
 	rest.Success(c, fileData)
@@ -77,11 +80,24 @@ func (h *FileHandler) GetFiles(c *gin.Context) {
 	}
 
 	var fileList []FileResponse
-	for _, filename := range files {
+	for _, storageKey := range files {
+		// Extract ID and name from storage key (format: "timestamp_originalname.ext")
+		parts := strings.SplitN(storageKey, "_", 2)
+		var fileID, fileName string
+		
+		if len(parts) == 2 {
+			fileID = parts[0]
+			fileName = parts[1]
+		} else {
+			// Fallback for files without timestamp prefix
+			fileID = storageKey
+			fileName = filepath.Base(storageKey)
+		}
+		
 		fileList = append(fileList, FileResponse{
-			ID:         filename,
-			Name:       filepath.Base(filename),
-			StorageKey: filename,
+			ID:         fileID,
+			Name:       fileName,
+			StorageKey: storageKey,
 		})
 	}
 

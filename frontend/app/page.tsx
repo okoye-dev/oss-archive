@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFiles } from "@/hooks/useFiles";
-import { Download, DownloadCloud } from "lucide-react";
+import { DownloadCloud } from "lucide-react";
 
 const Home = () => {
   const router = useRouter();
@@ -90,8 +90,8 @@ const Home = () => {
                 id="file-upload"
               />
               <label htmlFor="file-upload">
-                <Button asChild>
-                  <span>Choose Files</span>
+                <Button asChild disabled={uploading}>
+                  <span>{uploading ? "Uploading..." : "Choose Files"}</span>
                 </Button>
               </label>
             </div>
