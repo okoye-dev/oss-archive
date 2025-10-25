@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const GO_BACKEND_URL = 'http://localhost:6060';
+const SERVER_URL = process.env.IPV4_BACKEND_URL;
 
 export async function GET(
   request: NextRequest,
@@ -36,7 +36,7 @@ async function proxyRequest(
   method: string
 ) {
   const path = pathSegments.join('/');
-  const url = `${GO_BACKEND_URL}/api/${path}`;
+  const url = `${SERVER_URL}/api/${path}`;
   
   const headers: Record<string, string> = {};
   
