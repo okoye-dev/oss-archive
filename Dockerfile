@@ -60,6 +60,8 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'echo "Starting MinIO..."' >> /app/start.sh && \
     echo 'mkdir -p /app/data' >> /app/start.sh && \
     echo 'MINIO_ROOT_USER=minioadmin MINIO_ROOT_PASSWORD=minioadmin minio server /app/data --address :9000 --console-address :9001 &' >> /app/start.sh && \
+    echo 'echo "Waiting for MinIO to be ready..."' >> /app/start.sh && \
+    echo 'sleep 5' >> /app/start.sh && \
     echo 'echo "Starting Go backend..."' >> /app/start.sh && \
     echo './main &' >> /app/start.sh && \
     echo 'echo "Starting Next.js frontend..."' >> /app/start.sh && \
