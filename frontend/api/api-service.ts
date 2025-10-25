@@ -9,7 +9,7 @@ type RequestOptions = {
 
 export const getApiBaseUrl = () => {
   // Use the environment variable regardless of NODE_ENV
-  return process.env.NEXT_PUBLIC_DEV_SERVER_URL || "/api/v1";
+  return process.env.NEXT_PUBLIC_DEV_SERVER_URL || "/api";
 };
 
 class ApiService {

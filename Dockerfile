@@ -28,10 +28,7 @@ RUN pnpm install --frozen-lockfile
 
 # Copy frontend source and build
 COPY frontend/ ./
-# Set environment variable for build
-# Use relative URL for Railway (proxied through Next.js)
-ARG NEXT_PUBLIC_DEV_SERVER_URL=/api
-ENV NEXT_PUBLIC_DEV_SERVER_URL=$NEXT_PUBLIC_DEV_SERVER_URL
+# Don't set NEXT_PUBLIC_DEV_SERVER_URL - let it default to /api for Railway
 RUN pnpm build
 
 # Final stage - single container with both services
